@@ -35,6 +35,13 @@ public class ThreeSumBenchmark {
     private void benchmarkThreeSum(final String description, final Consumer<int[]> function, int n, final TimeLogger[] timeLoggers) {
         if (description.equals("ThreeSumCubic") && n > 4000) return;
         // FIXME
+        long startTime = System.currentTimeMillis();
+        function.accept(supplier.get());
+        long endTime = System.currentTimeMillis();
+        long time = endTime - startTime;
+        System.out.println("Algorithm -> "+description);
+        System.out.println(time+"ms");
+
         // END 
     }
 
