@@ -3,15 +3,12 @@
  */
 package edu.neu.coe.info6205.util;
 
-import edu.neu.coe.info6205.sort.BaseHelper;
-import edu.neu.coe.info6205.sort.Helper;
-import edu.neu.coe.info6205.sort.SortWithHelper;
-import edu.neu.coe.info6205.sort.elementary.BubbleSort;
-import edu.neu.coe.info6205.sort.elementary.InsertionSort;
-import edu.neu.coe.info6205.sort.elementary.RandomSort;
-import edu.neu.coe.info6205.sort.elementary.ShellSort;
+import edu.neu.coe.info6205.sort.*;
+import edu.neu.coe.info6205.sort.elementary.*;
 import edu.neu.coe.info6205.sort.linearithmic.TimSort;
 import edu.neu.coe.info6205.sort.linearithmic.*;
+
+import edu.neu.coe.info6205.util.Config;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,21 +26,124 @@ import static edu.neu.coe.info6205.util.SortBenchmarkHelper.generateRandomLocalD
 import static edu.neu.coe.info6205.util.SortBenchmarkHelper.getWords;
 import static edu.neu.coe.info6205.util.Utilities.formatWhole;
 
+
 public class SortBenchmark {
 
     public SortBenchmark(Config config) {
         this.config = config;
     }
 
-    public static void main(String[] args) throws IOException {
-        Config config = Config.load(SortBenchmark.class);
-        logger.info("SortBenchmark.main: " + config.get("SortBenchmark", "version") + " with word counts: " + Arrays.toString(args));
-        if (args.length == 0) logger.warn("No word counts specified on the command line");
-        SortBenchmark benchmark = new SortBenchmark(config);
-        benchmark.sortIntegersByShellSort(config.getInt("shellsort", "n", 100000));
-        benchmark.sortStrings(Arrays.stream(args).map(Integer::parseInt));
-        benchmark.sortLocalDateTimes(config.getInt("benchmarkdatesorters", "n", 100000), config);
+    public static void main(String[] args) throws Exception {
+//        Config config = Config.load(SortBenchmark.class);
+//        logger.info("SortBenchmark.main: " + config.get("SortBenchmark", "version") + " with word counts: " + Arrays.toString(args));
+//        if (args.length == 0) logger.warn("No word counts specified on the command line");
+//        SortBenchmark benchmark = new SortBenchmark(config);
+//        benchmark.sortIntegersByShellSort(config.getInt("shellsort", "n", 100000));
+//        benchmark.sortStrings(Arrays.stream(args).map(Integer::parseInt));
+//        benchmark.sortLocalDateTimes(config.getInt("benchmarkdatesorters", "n", 100000), config);
+          runMergeSort();
+          runQuickSort();
+          runHeapSort();
     }
+    public static void runMergeSort() throws Exception {
+        for (int i = 1; i <= 18; i++) {
+            int k = i + 3;
+            int N = (int) Math.pow(2, i);
+            final Config config = Config.setupConfig("true", "0", "0", "", "");
+            final Helper<Integer> helper = HelperFactory.create("merge sort", N, config);
+            System.out.println(helper);
+            Sort<Integer> s = new MergeSortBasic<>(helper);
+            s.init(N);
+            final Integer[] xs = helper.random(Integer.class, r -> r.nextInt(10000));
+            helper.preProcess(xs);
+            long startTime = System.nanoTime();
+            Integer[] ys = s.sort(xs);
+            long endTime = System.nanoTime();
+            double timeElapsed = (endTime - startTime) / 1e6;
+            helper.postProcess(ys);
+            final PrivateMethodTester privateMethodTester = new PrivateMethodTester(helper);
+            final StatPack statPack = (StatPack) privateMethodTester.invokePrivate("getStatPack");
+            System.out.println(statPack);
+            final int compares = (int) statPack.getStatistics(InstrumentedHelper.COMPARES).mean();
+            final int inversions = (int) statPack.getStatistics(InstrumentedHelper.INVERSIONS).mean();
+            final int fixes = (int) statPack.getStatistics(InstrumentedHelper.FIXES).mean();
+            final int swaps = (int) statPack.getStatistics(InstrumentedHelper.SWAPS).mean();
+            final int copies = (int) statPack.getStatistics(InstrumentedHelper.COPIES).mean();
+            final int worstCompares = N * k - N + 1;
+            System.out.println("Array Size: " + N);
+            System.out.println("Compares: " + compares);
+            System.out.println("Worst Compares: " + worstCompares);
+            System.out.println("Execution Time: " + timeElapsed + " milliseconds\n");
+        }
+    }
+    public static void runQuickSort() throws Exception {
+        for (int i = 1; i <= 18; i++) {
+            int k = i + 3;
+            int N = (int) Math.pow(2, i);
+            final Config config = Config.setupConfig("true", "0", "0", "", "");
+            final Helper<Integer> helper = HelperFactory.create("quick sort", N, config);
+            System.out.println(helper);
+            Sort<Integer> s = new QuickSort_DualPivot<>(helper);
+            s.init(N);
+            final Integer[] xs = helper.random(Integer.class, r -> r.nextInt(10000));
+            helper.preProcess(xs);
+            long startTime = System.nanoTime();
+            Integer[] ys = s.sort(xs);
+            long endTime = System.nanoTime();
+            double timeElapsed = (endTime - startTime) / 1e6;
+            helper.postProcess(ys);
+            final PrivateMethodTester privateMethodTester = new PrivateMethodTester(helper);
+            final StatPack statPack = (StatPack) privateMethodTester.invokePrivate("getStatPack");
+            System.out.println(statPack);
+            final int compares = (int) statPack.getStatistics(InstrumentedHelper.COMPARES).mean();
+            final int inversions = (int) statPack.getStatistics(InstrumentedHelper.INVERSIONS).mean();
+            final int fixes = (int) statPack.getStatistics(InstrumentedHelper.FIXES).mean();
+            final int swaps = (int) statPack.getStatistics(InstrumentedHelper.SWAPS).mean();
+            final int copies = (int) statPack.getStatistics(InstrumentedHelper.COPIES).mean();
+            final int worstCompares = N * k - N + 1;
+            System.out.println("Array Size: " + N);
+            System.out.println("Compares: " + compares);
+            System.out.println("Worst Compares: " + worstCompares);
+            System.out.println("Execution Time: " + timeElapsed + " milliseconds\n");
+        }
+    }
+    public static void runHeapSort() throws Exception {
+        for (int i = 1; i <= 18; i++) {
+            int k = i + 3;
+            int N = (int) Math.pow(2, i);
+            final Config config = Config.setupConfig("true", "0", "0", "", "");
+            final Helper<Integer> helper = HelperFactory.create("heap sort", N, config);
+            System.out.println(helper);
+            Sort<Integer> s = new HeapSort<>(helper);
+            s.init(N);
+            final Integer[] xs = helper.random(Integer.class, r -> r.nextInt(10000));
+            helper.preProcess(xs);
+            long startTime = System.nanoTime();
+            Integer[] ys = s.sort(xs);
+            long endTime = System.nanoTime();
+            double timeElapsed = (endTime - startTime) / 1e6;
+            helper.postProcess(ys);
+            final PrivateMethodTester privateMethodTester = new PrivateMethodTester(helper);
+            final StatPack statPack = (StatPack) privateMethodTester.invokePrivate("getStatPack");
+            System.out.println(statPack);
+            final int compares = (int) statPack.getStatistics(InstrumentedHelper.COMPARES).mean();
+            final int inversions = (int) statPack.getStatistics(InstrumentedHelper.INVERSIONS).mean();
+            final int fixes = (int) statPack.getStatistics(InstrumentedHelper.FIXES).mean();
+            final int swaps = (int) statPack.getStatistics(InstrumentedHelper.SWAPS).mean();
+            final int copies = (int) statPack.getStatistics(InstrumentedHelper.COPIES).mean();
+            final int worstCompares = N * k - N + 1;
+            System.out.println("Array Size: " + N);
+            System.out.println("Compares: " + compares);
+            System.out.println("Worst Compares: " + worstCompares);
+            System.out.println("Execution Time: " + timeElapsed + " milliseconds\n");
+        }
+    }
+
+
+
+
+
+
 
     public void sortLocalDateTimes(final int n, Config config) throws IOException {
         logger.info("Beginning LocalDateTime sorts");
@@ -100,6 +200,11 @@ public class SortBenchmark {
         if (isConfigBenchmarkStringSorter("quicksort"))
             runStringSortBenchmark(words, nWords, nRuns, new QuickSort_Basic<>(nWords, config), timeLoggersLinearithmic);
 
+        if (isConfigBenchmarkStringSorter("heapsort")) {
+            Helper<String> helper = HelperFactory.create("Heapsort", nWords, config);
+            runStringSortBenchmark(words, nWords, nRuns, new HeapSort<>(helper), timeLoggersLinearithmic);
+        }
+
         if (isConfigBenchmarkStringSorter("introsort"))
             runStringSortBenchmark(words, nWords, nRuns, new IntroSort<>(nWords, config), timeLoggersLinearithmic);
 
@@ -150,6 +255,11 @@ public class SortBenchmark {
 
         if (isConfigBenchmarkStringSorter("quicksort"))
             runStringSortBenchmark(words, nWords, nRuns, new QuickSort_Basic<>(nWords, config), timeLoggersLinearithmic);
+
+        if (isConfigBenchmarkStringSorter("heapsort")) {
+            Helper<String> helper = HelperFactory.create("Heapsort", nWords, config);
+            runStringSortBenchmark(words, nWords, nRuns, new HeapSort<>(helper), timeLoggersLinearithmic);
+        }
 
         if (isConfigBenchmarkStringSorter("introsort"))
             runStringSortBenchmark(words, nWords, nRuns, new IntroSort<>(nWords, config), timeLoggersLinearithmic);
@@ -383,6 +493,7 @@ public class SortBenchmark {
             new TimeLogger("Normalized time per run (n^2): ", (time, n) -> time / meanInversions(n) / 6 * 1e6)
     };
 
+
     private static final double LgE = Utilities.lg(Math.E);
 
     private boolean isConfigBenchmarkStringSorter(String option) {
@@ -400,6 +511,18 @@ public class SortBenchmark {
     private boolean isConfigBoolean(String section, String option) {
         return config.getBoolean(section, option);
     }
+
+    private static Integer[] generateRandomArray(int size) {
+        Integer[] array = new Integer[size];
+        Random random = new Random();
+        for (int i = 0; i < size; i++) {
+            array[i] = random.nextInt();
+        }
+        return array;
+    }
+
+
+
 
     private final Config config;
 }
